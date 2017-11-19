@@ -3,6 +3,16 @@
 
 
 
+## 모듈
+
+* collect : 데이터 수집 모듈
+* preprocess : 데이터 전처리 모듈
+* embedding : 단어 임베딩 모듈
+* model : 언어 모델 모듈
+* generate : 삼행시 생성 모듈
+
+
+
 ## Commit 규칙
 
 `[모듈-001] Do something`
