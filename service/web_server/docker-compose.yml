@@ -1,0 +1,8 @@
+version: '2'
+services:
+  app:
+    image: ybigta/alpacapaca-server/app
+    volumes:
+      - /home/ubuntu/ybigta/logs/bootapp:/ybigta/logs/bootapp
+    ports:
+      - 10001:10001

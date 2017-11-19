@@ -1,14 +1,46 @@
 group 'com.ybigta'
-version '1.0-SNAPSHOT'
 
 apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+apply plugin: 'org.springframework.boot'
 
-sourceCompatibility = 1.8
+buildscript {
+    ext {
+        javaVersion = '1.8'
+        javaEncoding = 'UTF-8'
+        springBootVersion = '1.5.8.RELEASE'
+    }
+
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+    }
+}
+
+jar {
+    baseName = 'alpacapaca-app'
+    //version = '0.0.1'
+}
 
 repositories {
     mavenCentral()
 }
 
+sourceCompatibility = javaVersion
+targetCompatibility = javaVersion
+[compileJava, compileTestJava]*.options*.encoding = javaEncoding
+
+
 dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.12'
+    compile("org.springframework.boot:spring-boot-starter-web")
+    compile("org.springframework.boot:spring-boot-starter-test")
+
+    // https://mvnrepository.com/artifact/org.projectlombok/lombok-maven
+    compile group: 'org.projectlombok', name: 'lombok', version: '1.16.16'
+
+    compile 'com.google.guava:guava:23.4-jre'
+
 }
