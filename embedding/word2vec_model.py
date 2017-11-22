@@ -36,7 +36,7 @@ class Word2VecModel() :
         self.model.save(model_filename)
     
     def load(self, model_filename):
-        self.model = Word2Vec.load(filemodel_filenamename)
+        self.model = Word2Vec.load(model_filename)
 
     def build_embedding(self, input_filename, model_filename):
 
