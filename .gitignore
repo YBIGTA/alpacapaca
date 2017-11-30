@@ -112,3 +112,4 @@ gradle/wrapper/gradle-wrapper.jar
 *.iml
 *.ipr
 
+sandbox/
