@@ -1,0 +1,8 @@
+{
+    "REPO_URL":"https://github.com/YBIGTA/alpacapaca.git",
+	"PROJECT_NAME": "alpacapaca",
+	"REMOTE_HOST": "alpacapaca.dreamgonfly.me",
+	"REMOTE_HOST_SSH": "52.35.99.150",
+	"REMOTE_USER": "ubuntu",
+	"KEY_FILENAME": "~/key/ec2-dreamgonfly.pem"
+}
