@@ -26,6 +26,8 @@ env.hosts = [
 env.key_filename = KEY_FILENAME
 # 원격 서버중 어디에 프로젝트를 저장할지 지정해준 뒤,
 project_folder = '/home/{}/{}'.format(env.user, PROJECT_NAME)
+server_folder = '/home/{}/{}/service/model_server'.format(env.user, PROJECT_NAME)
+virtualenv_dir = '/home/{}/.virtualenvs/{}'.format(env.user, PROJECT_NAME)
 # 우리 프로젝트에 필요한 apt 패키지들을 적어줍니다.
 apt_requirements = [
     'curl',
@@ -92,43 +94,27 @@ def _get_latest_source():
 
 # put이라는 방식으로 로컬의 파일을 원격지로 업로드할 수 있습니다.
 def _put_envs():
-    put('uwsgi_params',
-        '/home/{username}/{project_name}/uwsgi_params'.format(
-            username=REMOTE_USER,
-            project_name=PROJECT_NAME
-            )
-        )
-    put('mywebsite_nginx.conf',
-        '/home/{username}/{project_name}/mywebsite_nginx.conf'.format(
-            username=REMOTE_USER,
-            project_name=PROJECT_NAME
-            )
-        )
-    put('mywebsite_uwsgi.ini',
-        '/home/{username}/{project_name}/mywebsite_uwsgi.ini'.format(
-            username=REMOTE_USER,
-            project_name=PROJECT_NAME
-            )
-        )
+    put('uwsgi_params', os.path.join(server_folder, 'uwsgi_params'))
+    put('mywebsite_nginx.conf', os.path.join(server_folder, 'mywebsite_nginx.conf'))
+    put('mywebsite_uwsgi.ini', os.path.join(server_folder, 'mywebsite_uwsgi.ini'))
 
 def _download_data():
-    for cuda_file in ['libcublas.so.8.0','libcusolver.so.8.0','libcudart.so.8.0','libcudnn.so.6','libcufft.so.8.0','libcurand.so.8.0']:
-        run('sudo scp -P 2222 poza@1.212.234.245:/usr/local/cuda/lib64/{} /usr/local/cuda/lib64'.format(cuda_file))
-    # run('scp -P 2222 poza@1.212.234.245:/srv/poza/Refined_Model/checkpoints/mvp1_ver2/output_graph.pb {}/Data/.'.format(project_folder))
-    # run('scp -P 2222 -r poza@1.212.234.245:/srv/poza/Refined_Model/demo_refer/Data/MVP1 {}/Data/.'.format(project_folder))
+    pass
+# run('scp -i ~/key/ec2-dreamgonfly.pem ~/Documents/ybigta/alpacapaca/service/model_server/requirements.txt ubuntu@52.38.217.70:~/alpacapaca/service/model_server/.')
+    # run('scp -i ~/key/ec2-dreamgonfly.pem ~/Documents/ybigta/alpacapaca/train/output/reader_params.pkl ubuntu@52.38.217.70:~/alpacapaca/train/output/.')
+    # run('scp -i ~/key/ec2-dreamgonfly.pem ~/Documents/ybigta/alpacapaca/train/output/saved_model.pkl ubuntu@52.38.217.70:~/alpacapaca/train/output/.')
 
 # Repo에서 받아온 requirements.txt를 통해 pip 패키지를 virtualenv에 설치해줍니다.
 def _update_virtualenv():
-    virtualenv_folder = project_folder + '/../.virtualenvs/{}'.format(PROJECT_NAME)
-    if not exists(virtualenv_folder + '/bin/pip'):
+    if not exists(virtualenv_dir + '/bin/pip'):
         run('cd /home/%s/.virtualenvs && virtualenv --system-site-packages -p python3 %s' % (env.user, PROJECT_NAME))
     sudo('%s/bin/pip install -r %s/requirements.txt' % (    
-        virtualenv_folder, project_folder
+        virtualenv_dir, server_folder
     ))
 
 def _enable_site():
     if not exists('/etc/nginx/sites-enabled/mywebsite_nginx.conf'):
-        sudo('ln -s /home/ubuntu/alpacapaca/mywebsite_nginx.conf /etc/nginx/sites-enabled/')
+        sudo('ln -s {} /etc/nginx/sites-enabled/'.format(os.path.join(server_folder, 'mywebsite_nginx.conf')))
 
 def _emperor_mode():
     if not exists('/etc/uwsgi'):
@@ -136,7 +122,7 @@ def _emperor_mode():
     if not exists('/etc/uwsgi/vassals'):
         sudo('mkdir /etc/uwsgi/vassals')
     if not exists('/etc/uwsgi/vassals/mywebsite_uwsgi.ini'):
-        sudo('ln -s /home/ubuntu/alpacapaca/mywebsite_uwsgi.ini /etc/uwsgi/vassals/')
+        sudo('ln -s {} /etc/uwsgi/vassals/'.format(os.path.joinn(server_folder, 'mywebsite_uwsgi.ini')))
 
 script = """'#!/bin/sh -e
 #
