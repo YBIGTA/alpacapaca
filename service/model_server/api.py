@@ -32,7 +32,7 @@ class Alpacapaca(Resource):
     
     def get(self, input_word):
         
-        results = generator.samples('가나다')
+        results = generator.samples(input_word)
 
         return {'success': True,
                 'results': results}
