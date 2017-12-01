@@ -1,9 +1,11 @@
 package com.ybigta.alpacapaca.autoreply.service.validator;
 
+import com.ybigta.alpacapaca.autoreply.service.ErrorMessages;
 import org.junit.Before;
 import org.junit.Test;
 
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
 public class ValidationImplTests {
@@ -21,10 +23,24 @@ public class ValidationImplTests {
         String koreanStringLength3 = "한글임";
 
         // when
-        boolean trueExpectedValidationResult = contentValidator.validate(koreanStringLength3);
+        ValidationResult trueExpectedValidationResult = contentValidator.validate(koreanStringLength3);
 
         // then
-        assertThat(trueExpectedValidationResult, is(true));
+        assertThat(trueExpectedValidationResult.isValid(), is(true));
+        assertNull(trueExpectedValidationResult.getMessage());
+    }
+
+    @Test
+    public void testReturnFalseIfInputIsNullString() {
+        // given
+        String nullString = null;
+
+        // when
+        ValidationResult falseExpectedValidationResultDueToNull = contentValidator.validate(nullString);
+
+        // then
+        assertThat(falseExpectedValidationResultDueToNull.isValid(), is(false));
+        assertThat(falseExpectedValidationResultDueToNull.getMessage(), is(ErrorMessages.INPUT_MESSAGE_IS_NULL));
     }
 
     @Test
@@ -34,12 +50,14 @@ public class ValidationImplTests {
         String koreanStringLength2 = "한글";
 
         // when
-        boolean falseExpectedValidationResultDueToLengthIs4 = contentValidator.validate(koreanStringLength4);
-        boolean falseExpectedValidationResultDueToLengthIs2 = contentValidator.validate(koreanStringLength2);
+        ValidationResult falseExpectedValidationResultDueToLengthIs4 = contentValidator.validate(koreanStringLength4);
+        ValidationResult falseExpectedValidationResultDueToLengthIs2 = contentValidator.validate(koreanStringLength2);
 
         // then
-        assertThat(falseExpectedValidationResultDueToLengthIs4, is(false));
-        assertThat(falseExpectedValidationResultDueToLengthIs2, is(false));
+        assertThat(falseExpectedValidationResultDueToLengthIs2.isValid(), is(false));
+        assertThat(falseExpectedValidationResultDueToLengthIs2.getMessage(), is(ErrorMessages.LENGTH_IS_NOT_VALID_MESSAGE));
+        assertThat(falseExpectedValidationResultDueToLengthIs4.isValid(), is(false));
+        assertThat(falseExpectedValidationResultDueToLengthIs4.getMessage(), is(ErrorMessages.LENGTH_IS_NOT_VALID_MESSAGE));
     }
 
     @Test
@@ -48,10 +66,11 @@ public class ValidationImplTests {
         String englishStringLength3 = "abc";
 
         // when
-        boolean falseExpectedValidationResultDueToEnglish = contentValidator.validate(englishStringLength3);
+        ValidationResult falseExpectedValidationResultDueToEnglish = contentValidator.validate(englishStringLength3);
 
         // then
-        assertThat(falseExpectedValidationResultDueToEnglish, is(false));
+        assertThat(falseExpectedValidationResultDueToEnglish.isValid(), is(false));
+        assertThat(falseExpectedValidationResultDueToEnglish.getMessage(), is(ErrorMessages.INPUT_CONTENT_IS_NOT_KOREAN_MESSAGE));
     }
 
     @Test
@@ -60,9 +79,10 @@ public class ValidationImplTests {
         String numericStringLength3 = "123";
 
         // when
-        boolean falseExpectedValidationResultDueToNumeric = contentValidator.validate(numericStringLength3);
+        ValidationResult falseExpectedValidationResultDueToNumeric = contentValidator.validate(numericStringLength3);
 
         // then
-        assertThat(falseExpectedValidationResultDueToNumeric, is(false));
+        assertThat(falseExpectedValidationResultDueToNumeric.isValid(), is(false));
+        assertThat(falseExpectedValidationResultDueToNumeric.getMessage(), is(ErrorMessages.INPUT_CONTENT_IS_NOT_KOREAN_MESSAGE));
     }
 }
