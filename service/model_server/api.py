@@ -10,11 +10,11 @@ print(parentdir)
 sys.path.insert(0, parentdir) 
 
 from generate.generator import LineGenerator
-from train.trainer import DataReader
+from train.trainer import DataReader2
 import torch
 
 rnn = torch.load(os.path.join(parentdir, 'train/output/saved_model.pkl'))
-data_reader = DataReader()
+data_reader = DataReader2()
 data_reader.load(os.path.join(parentdir, 'train/output/reader_params.pkl'))
 generator = LineGenerator(rnn, data_reader)
 
