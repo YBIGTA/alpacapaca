@@ -34,7 +34,7 @@ public class MessageGeneratorImpl implements MessageGenerator {
                 AlpacapacaMessage message = response.getBody();
                 builder.append(toResultFormat(message));
             } else {
-                log.info("Server Error Occurs");
+                log.info("Server Error Occurs: {}", response.getStatusCodeValue());
                 builder.append(ErrorMessages.SERVER_ERROR_MESSAGE);
             }
         } else {
