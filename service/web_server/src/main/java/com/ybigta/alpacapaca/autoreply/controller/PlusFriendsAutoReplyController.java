@@ -1,7 +1,7 @@
 package com.ybigta.alpacapaca.autoreply.controller;
 
 import com.ybigta.alpacapaca.autoreply.PayloadFieldTypes;
-import com.ybigta.alpacapaca.autoreply.model.Request;
+import com.ybigta.alpacapaca.autoreply.model.MessageRequest;
 import com.ybigta.alpacapaca.autoreply.service.MessageGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -30,11 +30,11 @@ public class PlusFriendsAutoReplyController {
 
     @PostMapping(value = "/message")
     @ResponseStatus(HttpStatus.OK)
-    public Map<String, Object> submitMessage(@RequestBody Request request) {
+    public Map<String, Object> submitMessage(@RequestBody MessageRequest messageRequest) {
         Map<String, Object> response = new HashMap<>();
         Map<String, Object> message = new HashMap<>();
 
-        String inputContent = request.getContent();
+        String inputContent = messageRequest.getContent();
         String returnMessage = messageGenerator.generateMessage(inputContent);
 
         message.put(PayloadFieldTypes.TEXT, returnMessage);
