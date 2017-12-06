@@ -6,7 +6,7 @@ import numpy as np
 
 class EmbeddingDataset(Dataset):
     
-    def __init__(self, filepath, embedding, vector_size, sampleSize):
+    def __init__(self, filepath, embedding, vector_size, sampleSize = None):
 
         with open(filepath, 'r') as f:
             if sampleSize is not None:
