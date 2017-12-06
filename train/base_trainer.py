@@ -109,10 +109,10 @@ class DataLoaderTrainer():
         for i in range(self.i, epochs):
             self.i = i
 
-            self.avg_loss = self.train()
+            self.avg_loss = self.train()[0]
 
             if i % self.print_every == 0:
-                print('%s (%d %d%%) %.4f' % (self.timeSince(start), i, i / self.epochs * 100, self.avg_loss))
+                print('%s (%d %d%%) %.4f' % (self.timeSince(start), i, i / epochs * 100, self.avg_loss))
                 
             if i % self.plot_every == 0:
                 self.all_losses.append(self.avg_loss)
