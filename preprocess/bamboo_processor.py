@@ -5,6 +5,8 @@ import os
 from konlpy.tag import Twitter
 from .preprocessing_code import FileUtils
 
+PAD_TOKEN = '<PAD>/Pad'
+
 class POSProcessor: # 문자 데이터 처리하기 위한 클래스
     def __init__(self, regex_pattern='([' + string.punctuation + '])', 
                  output_dirpath='preprocess/output/', tagger=None):
@@ -44,7 +46,7 @@ class POSProcessor: # 문자 데이터 처리하기 위한 클래스
 
         # 문장 성분을 추출한다.
         tagged_tuples = self.tagger.pos(line)
-        tagged_strings = [word + '/' + tag for word, tag in tagged_tuples]
+        tagged_strings = [word + '/' + tag for word, tag in tagged_tuples] + [PAD_TOKEN]
 
         # 태깅된 단어들을 이어붙인다.
         processed_line = ' '.join(tagged_strings)
