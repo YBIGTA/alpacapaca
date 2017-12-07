@@ -91,14 +91,17 @@ class DataLoaderTrainer():
             self.inputs, self.targets = inputs, targets
 
             self.optimizer.zero_grad()
-            self.rnn.hidden = self.rnn.init_hidden()
+            self.rnn.hidden = self.rnn.init_hidden(inputs.size(0))
 
             self.sentence_out = self.rnn(inputs)
             loss = self.criterion(self.sentence_out, self.targets)
             loss.backward()
             self.optimizer.step()
 
-            self.losses.append(loss.data)
+            self.losses.append(loss.data[0])
+
+            if self.i == 0: # for testing
+                break
 
         return sum(self.losses) / len(self.losses)
 
@@ -106,10 +109,10 @@ class DataLoaderTrainer():
 
         start = time.time()
 
-        for i in range(self.i, epochs):
+        for i in range(self.i, epochs + 1):
             self.i = i
 
-            self.avg_loss = self.train()[0]
+            self.avg_loss = self.train()
 
             if i % self.print_every == 0:
                 print('%s (%d %d%%) %.4f' % (self.timeSince(start), i, i / epochs * 100, self.avg_loss))
