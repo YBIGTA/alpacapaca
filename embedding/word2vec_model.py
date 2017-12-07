@@ -20,7 +20,6 @@ class Word2VecModel() :
         self.sg = sg
 
         self.unknown_token = np.random.randn(self.size)
-        self.pad_token = np.zeros(self.size)
         self.vocab = None
 
         # 프로젝트 최상단 디렉토리 경로를 가져온다.
@@ -48,6 +47,7 @@ class Word2VecModel() :
                          sample=self.sample, 
                          sg=self.sg)
         self.vocab = self.model.wv.vocab.keys()
+        self.pad_token = self.model.wv['<PAD>/Pad']
 
         self.save(output_filepath)
 
@@ -62,6 +62,7 @@ class Word2VecModel() :
         self.model = Word2Vec.load(output_filepath + '.w2v')
         self.unknown_token = np.load(output_filepath + '_unknown_token.npy')
         self.vocab = self.model.wv.vocab.keys()
+        self.pad_token = self.model.wv['<PAD>/Pad']
 
 if __name__ == '__main__':
     
