@@ -4,8 +4,57 @@ import torch
 import torch.nn.functional as F
 import numpy as np
 
+class TextUtils:
+    @staticmethod
+    def read_words(filename):
+        with open(filename, 'r', encoding= "utf-8") as file:
+            return [sentence.strip().split() for sentence in file.readlines()]
 
 class EmbeddingDataset(Dataset):
+    
+    def __init__(self, input_filepath, embedding):
+        
+        raw_sentences = TextUtils.read_words(input_filepath)
+        self.sentences = [sentence for sentence in raw_sentences if len(sentence) > 3 and len(sentence) < 30] 
+        self.embedding = embedding
+        
+    def __getitem__(self, index):
+        sentence = self.sentences[index]
+        
+        sentence_vector = np.stack([self.embedding.vectorize(word) for word in sentence[:-1]])
+        target_vector = np.stack([self.embedding.vectorize(word) for word in sentence[1:]])
+        
+        input_tensor = torch.FloatTensor(sentence_vector)
+        output_tensor = torch.FloatTensor(target_vector)
+        
+        return input_tensor, output_tensor
+    
+    def __len__(self):
+        return len(self.sentences)
+
+class EmbeddingDataLoader(DataLoader):
+    
+    def __init__(self, *args, **kwargs):
+        super(EmbeddingDataLoader, self).__init__(*args, **kwargs)
+        self.collate_fn = self._collate_fn
+        
+    def _collate_fn(self, batch):
+        max_sample = max(batch, key=lambda x: x[0].size(0))
+        max_length = max_sample[0].size(0)
+        embedding_size = max_sample[0].size(1)
+
+        inputs = []
+        outputs = []
+        for inp, outp in batch:
+            ss = inp.size(0)
+            new_inp = F.pad(inp.unsqueeze(0).unsqueeze(0), (0,0,0,max_length-ss))
+            new_outp = F.pad(outp.unsqueeze(0).unsqueeze(0), (0,0,0,max_length-ss))
+            inputs.append(new_inp.squeeze())
+            outputs.append(new_outp.squeeze())
+
+        return torch.stack(inputs), torch.stack(outputs)
+
+class ModifiedEmbeddingDataset(Dataset):
     def __init__(self, filepath, embedding, vector_size, sampleSize=None):
 
         with open(filepath, 'r') as f:
@@ -41,9 +90,9 @@ class EmbeddingDataset(Dataset):
         return len(self.cleaned)
 
 
-class EmbeddingDataLoader(DataLoader):
+class ModifiedEmbeddingDataLoader(DataLoader):
     def __init__(self, *args, **kwargs):
-        super(EmbeddingDataLoader, self).__init__(*args, **kwargs)
+        super(ModifiedEmbeddingDataLoader, self).__init__(*args, **kwargs)
         self.collate_fn = self._collate_fn
 
     def _collate_fn(self, batch):
