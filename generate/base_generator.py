@@ -9,6 +9,8 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 
+PAD_TOKEN = '<PAD>/Pad'
+
 class LineGenerator():
 
     def __init__(self, model, data_reader, max_length=20):
@@ -85,39 +87,40 @@ class LineSampleGenerator():
 
 class LineEmbeddingGenerator():
 
-    def __init__(self, model, dataloader, embedding, vector_size, max_length=20):
+    def __init__(self, model, embedding, max_length=20):
 
         self.rnn = model
-        self.dataloader = dataloader
         self.embedding = embedding
         self.max_length = max_length
-        self.vector_size = vector_size
 
-    # Sample from a category and starting letter
-    def sample(self, start_letter='A'):
-        start_word = random.choice([key for key in self.embedding.vocab.keys() if key[0] == start_letter])
-        input = (self.embedding[start_word] if word in self.embedding.vocab else self.unknown)
-        self.rnn.hidden = self.rnn.init_hidden()
+    def fit_shape(self, vector):
+        return Variable(torch.FloatTensor(vector.reshape(1, 1, -1)))
 
-        output_name = start_word
+    def sample(self, start_letter='가'):
+        start_word = random.choice([key for key in self.embedding.vocab if key[0] == start_letter])
+        self.input_vector = self.embedding.vectorize(start_word)
+        self.input_tensor = self.fit_shape(self.input_vector)
+
+        self.rnn.init_hidden(1)
+
+        self.output_line = start_word.split('/')[0]
 
         for i in range(self.max_length):
-            output, hidden = self.rnn(input.view(1, -1, self.vector_size), hidden)
-            # topv, topi = output.data.topk(1)
+            self.output_tensor = self.rnn(self.input_tensor)
+            # topv, topi = self.output_scores.data.topk(1)
             # topi = topi[0][0]
-            tt = output.data.topk(10)
-            topi = tt[1].numpy()[0][np.random.randint(len(tt[0][0]))]
-            if topi == 0:
+            self.output_vector = self.output_tensor.data[0, 0, :].numpy()
+            topn = self.embedding.model.wv.similar_by_vector(self.output_vector)
+            next_word = random.choice(topn)[0]
+            if next_word == PAD_TOKEN:
                 break
-            else:
-                letter = self.dataloader.idx2word[topi]
-                output_name = output_name + ' ' + letter[0]
-            input = Variable(self.dataloader.inputTensor(letter))
+            self.output_line = self.output_line + ' ' + next_word.split('/')[0]
+            self.input_vector = self.embedding.vectorize(next_word)
+            self.input_tensor = self.fit_shape(self.input_vector)
 
-        return output_name
+        return self.output_line
 
-    # Get multiple samples from one category and multiple starting letters
-    def samples(self, start_letters='ABC'):
+    def samples(self, start_letters='가나다'):
         results = []
         for start_letter in start_letters:
             results.append(self.sample(start_letter))
