@@ -7,8 +7,10 @@ from .preprocessing_code import FileUtils
 
 
 class POSProcessor:  # 문자 데이터 처리하기 위한 클래스
-    def __init__(self, regex_pattern='([' + string.punctuation + '])',
-                 output_dirpath='preprocess/output/', tagger=None):
+    def __init__(self,
+                 regex_pattern='([' + string.punctuation + '])',
+                 output_dirpath='preprocess/output/',
+                 tagger=None):
         self.regex_pattern = regex_pattern
         # 프로젝트 최상단 디렉토리 경로를 가져온다.
         dirname = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -46,6 +48,9 @@ class POSProcessor:  # 문자 데이터 처리하기 위한 클래스
         # 문장 성분을 추출한다.
         tagged_tuples = self.tagger.pos(line)
         tagged_strings = [word + '/' + tag for word, tag in tagged_tuples]
+
+        # 문장 맨 마지막에 PAD 추가
+        tagged_strings.append('<Pad>/Pad')
 
         # 태깅된 단어들을 이어붙인다.
         processed_line = ' '.join(tagged_strings)
