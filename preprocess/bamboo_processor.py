@@ -1,15 +1,16 @@
-import json
-import re  # 정규표현식을 처리하기 위한 모듈
-import string
 import os
+import string
+
 from konlpy.tag import Twitter
+
 from .preprocessing_code import FileUtils
 
-PAD_TOKEN = '<PAD>/Pad'
+class POSProcessor:  # 문자 데이터 처리하기 위한 클래스
+    def __init__(self,
+                 regex_pattern='([' + string.punctuation + '])',
+                 output_dirpath='preprocess/output/',
+                 tagger=None):
 
-class POSProcessor: # 문자 데이터 처리하기 위한 클래스
-    def __init__(self, regex_pattern='([' + string.punctuation + '])', 
-                 output_dirpath='preprocess/output/', tagger=None):
         self.regex_pattern = regex_pattern
         # 프로젝트 최상단 디렉토리 경로를 가져온다.
         dirname = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -19,20 +20,20 @@ class POSProcessor: # 문자 데이터 처리하기 위한 클래스
         self.tagger = tagger if tagger is not None else Twitter()
 
     @staticmethod
-    def get_messages(posts): #대숲글 전체 데이터 중에 key 'message'를 갖는 것들만 필터링하기 위해 사용
+    def get_messages(posts):  # 대숲글 전체 데이터 중에 key 'message'를 갖는 것들만 필터링하기 위해 사용
         for post in posts:
-            if 'message' in post: # post는 딕셔너리 형태이므로 찾아야하는 key값이 있는지 여부 검사
-                yield post['message'] # 해당 키 값이 있는 경우 generator 생성
+            if 'message' in post:  # post는 딕셔너리 형태이므로 찾아야하는 key값이 있는지 여부 검사
+                yield post['message']  # 해당 키 값이 있는 경우 generator 생성
 
-    def get_results(self, messages): 
+    def get_results(self, messages):
         for message in messages:
             lines = message.split('\n')
             # 인덱스 3 이전에는 ~번째 외침, 시간 정보 등이 들어있기 때문에 스킵한다.
             for line in lines[3:]:
                 if len(line) > 0:
-                    yield self._process_line(line)
+                    yield self.process_line(line)
 
-    def _process_line(self, line):
+    def process_line(self, line):
         """한 줄의 문장을 전처리한다.
 
         Args:
@@ -46,7 +47,10 @@ class POSProcessor: # 문자 데이터 처리하기 위한 클래스
 
         # 문장 성분을 추출한다.
         tagged_tuples = self.tagger.pos(line)
-        tagged_strings = [word + '/' + tag for word, tag in tagged_tuples] + [PAD_TOKEN]
+        tagged_strings = [word + '/' + tag for word, tag in tagged_tuples]
+
+        # 문장 맨 마지막에 PAD 추가
+        tagged_strings.append('<Pad>/Pad')
 
         # 태깅된 단어들을 이어붙인다.
         processed_line = ' '.join(tagged_strings)
@@ -64,24 +68,24 @@ class POSProcessor: # 문자 데이터 처리하기 위한 클래스
             output_filepath
         """
         output_filepath = os.path.join(self.abs_output_dirpath, output_filename)
-        
-        if os.path.exists(output_filepath) and refresh == False:
+
+        if os.path.exists(output_filepath) and refresh is False:
             return output_filepath
 
-        data = FileUtils.load_data(input_filename)
+        data = FileUtils.load_json_data(input_filename)
         messages = self.get_messages(data)
         results = self.get_results(messages)
         FileUtils.write_data(output_filepath, results)
 
         return output_filepath
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     input_filename = '../collect/output/bamboo.json'
     output_filename = 'result.txt'
 
     preprocessor = POSProcessor()
-    processed_filepath = preprocessor.preprocess(input_filename=input_filename, 
-                                             output_filename=output_filename)
-    
+    processed_filepath = preprocessor.preprocess(input_filename=input_filename,
+                                                 output_filename=output_filename)
+
     print('processed filepath :', processed_filepath)
