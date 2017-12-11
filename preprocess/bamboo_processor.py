@@ -69,7 +69,7 @@ class POSProcessor:  # 문자 데이터 처리하기 위한 클래스
         """
         output_filepath = os.path.join(self.abs_output_dirpath, output_filename)
 
-        if os.path.exists(output_filepath) and refresh is False:
+        if os.path.exists(output_filepath) and not refresh:
             return output_filepath
 
         data = FileUtils.load_json_data(input_filename)
