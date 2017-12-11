@@ -37,6 +37,7 @@ targetCompatibility = javaVersion
 dependencies {
     compile("org.springframework.boot:spring-boot-starter-web")
     compile("org.springframework.boot:spring-boot-starter-test")
+    compile("org.springframework.boot:spring-boot-starter-actuator")
 
     // https://mvnrepository.com/artifact/org.projectlombok/lombok-maven
     compile group: 'org.projectlombok', name: 'lombok', version: '1.16.16'
