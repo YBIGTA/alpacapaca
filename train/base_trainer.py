@@ -71,7 +71,7 @@ class LetterTrainer():
 class DataLoaderTrainer():
 
     def __init__(self, model, dataloader, optimizer, scheduler, criterion=nn.MSELoss(), 
-                print_every=1, plot_every=1):
+                print_every=1, plot_every=1, use_gpu=False):
 
         self.rnn = model
         self.dataloader = dataloader
@@ -82,16 +82,20 @@ class DataLoaderTrainer():
         self.plot_every = plot_every
         self.i = 0
         self.all_losses = []
+        self.use_gpu = use_gpu
 
     def train(self):
 
         self.losses = []
         for inputs, targets in tqdm(self.dataloader):
 
-            self.inputs, self.targets = inputs, targets
+        	if self.use_gpu:
+        		self.inputs, self.targets = Variable(inputs.cuda()), Variable(targets.cuda())
+        	else:
+	            self.inputs, self.targets = Variable(inputs), Variable(targets)
 
             self.optimizer.zero_grad()
-            self.rnn.hidden = self.rnn.init_hidden(inputs.size(0))
+            self.rnn.init_hidden(inputs.size(0))
 
             self.sentence_out = self.rnn(inputs)
             loss = self.criterion(self.sentence_out, self.targets)
