@@ -93,11 +93,11 @@ class DataLoaderTrainer():
                 self.inputs, self.targets = Variable(inputs.cuda()), Variable(targets.cuda())
             else:
                 self.inputs, self.targets = Variable(inputs), Variable(targets)
-            
+
             self.optimizer.zero_grad()
             self.rnn.init_hidden(inputs.size(0))
 
-            self.sentence_out = self.rnn(inputs)
+            self.sentence_out = self.rnn(self.inputs)
             loss = self.criterion(self.sentence_out, self.targets)
             loss.backward()
             self.optimizer.step()
