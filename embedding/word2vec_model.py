@@ -34,7 +34,7 @@ class Word2VecModel() :
         
         if (os.path.exists(output_filepath + '.w2v') 
             and os.path.exists(output_filepath + '_unknown_token.npy')
-            and refresh == False):
+            and not refresh):
 
             return self.load(output_filepath)
 

@@ -24,10 +24,7 @@ class EmbeddingDataset(Dataset):
         sentence_vector = np.stack([self.embedding.vectorize(word) for word in sentence[:-1]])
         target_vector = np.stack([self.embedding.vectorize(word) for word in sentence[1:]])
         
-        input_tensor = torch.FloatTensor(sentence_vector)
-        output_tensor = torch.FloatTensor(target_vector)
-        
-        return input_tensor, output_tensor
+        return sentence_vector, target_vector
     
     def __len__(self):
         return len(self.sentences)
@@ -39,20 +36,23 @@ class EmbeddingDataLoader(DataLoader):
         self.collate_fn = self._collate_fn
         
     def _collate_fn(self, batch):
-        max_sample = max(batch, key=lambda x: x[0].size(0))
-        max_length = max_sample[0].size(0)
-        embedding_size = max_sample[0].size(1)
+        max_sample = max(batch, key=lambda x: x[0].shape[0])
+        max_length = max_sample[0].shape[0]
+        embedding_size = max_sample[0].shape[1]
 
         inputs = []
         outputs = []
         for inp, outp in batch:
-            ss = inp.size(0)
-            new_inp = F.pad(inp.unsqueeze(0).unsqueeze(0), (0,0,0,max_length-ss))
-            new_outp = F.pad(outp.unsqueeze(0).unsqueeze(0), (0,0,0,max_length-ss))
+            ss = inp.shape[0]
+            new_inp = np.append(inp, np.zeros((max_length-ss,embedding_size)), axis=0)
+            new_outp = np.append(outp, np.zeros((max_length-ss,embedding_size)), axis=0)
+
             inputs.append(new_inp.squeeze())
             outputs.append(new_outp.squeeze())
-
-        return torch.stack(inputs), torch.stack(outputs)
+        
+        input_array, output_array = np.stack(inputs), np.stack(outputs)
+        input_tensor, output_tensor = torch.FloatTensor(input_array), torch.FloatTensor(output_array)
+        return input_tensor, output_tensor
 
 class ModifiedEmbeddingDataset(Dataset):
     def __init__(self, filepath, embedding, vector_size, sampleSize=None):

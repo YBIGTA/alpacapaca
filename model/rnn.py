@@ -27,7 +27,7 @@ class RNN(nn.Module):
         return Variable(torch.zeros(1, self.hidden_size))
 
 class BasicLSTM(nn.Module):
-    def __init__(self, input_size, rnn_size, hidden_size, target_size):
+    def __init__(self, input_size, rnn_size, hidden_size, target_size, use_gpu=False):
         super(BasicLSTM, self).__init__()
         
         self.rnn_size = rnn_size
@@ -37,18 +37,24 @@ class BasicLSTM(nn.Module):
         
         self.hidden2out = nn.Linear(rnn_size, target_size)
         
+        self.use_gpu = use_gpu
+        
         # self.softmax = nn.LogSoftmax()
 
     def forward(self, inputs):
         # inputs : (batch_size, seq_size, embedding_size)
-        
         embeds = self.i2h(inputs)
         lstm_out, self.hidden = self.lstm(embeds, self.hidden)
+        self.hidden = self.hidden[0].cuda(), self.hidden[1].cuda()
         # print(lstm_out.size())
         output_space = self.hidden2out(lstm_out)
         # output_scores = self.softmax(output_space)
         return output_space
 
     def init_hidden(self, batch_size):
-        self.hidden = (Variable(torch.zeros(1, batch_size, self.rnn_size)),
+        if self.use_gpu:
+            self.hidden = (Variable(torch.zeros(1, batch_size, self.rnn_size).cuda()),
+                Variable(torch.zeros(1, batch_size, self.rnn_size).cuda()))
+        else:
+            self.hidden = (Variable(torch.zeros(1, batch_size, self.rnn_size)),
                 Variable(torch.zeros(1, batch_size, self.rnn_size)))
