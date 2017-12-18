@@ -9,7 +9,7 @@ class TextUtils:
             return [sentence.strip().split() for sentence in file.readlines()]
 
 class Word2VecModel() :
-    def __init__(self, size=100, window=2, min_count=10, workers=4, sg=1, sample=1e-5,
+    def __init__(self, size=300, window=1, min_count=10, workers=4, sg=1, sample=1e-5, iter=20,
                  output_dirpath='embedding/output/'):
         self.size = size
         self.window = window # window size
