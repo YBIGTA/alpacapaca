@@ -89,11 +89,11 @@ class DataLoaderTrainer():
         self.losses = []
         for inputs, targets in tqdm(self.dataloader):
 
-        	if self.use_gpu:
-        		self.inputs, self.targets = Variable(inputs.cuda()), Variable(targets.cuda())
-        	else:
-	            self.inputs, self.targets = Variable(inputs), Variable(targets)
-
+            if self.use_gpu:
+                self.inputs, self.targets = Variable(inputs.cuda()), Variable(targets.cuda())
+            else:
+                self.inputs, self.targets = Variable(inputs), Variable(targets)
+            
             self.optimizer.zero_grad()
             self.rnn.init_hidden(inputs.size(0))
 
