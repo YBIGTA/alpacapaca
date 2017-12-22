@@ -95,7 +95,7 @@ class DataLoaderTrainer():
                 self.inputs, self.targets = Variable(inputs), Variable(targets)
 
             self.optimizer.zero_grad()
-            self.rnn.init_hidden(inputs.size(0))
+            self.rnn.init_hidden(inputs.size(0), self.use_gpu)
 
             self.sentence_out = self.rnn(self.inputs)
             loss = self.criterion(self.sentence_out, self.targets)

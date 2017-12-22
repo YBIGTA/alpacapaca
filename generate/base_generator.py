@@ -87,14 +87,18 @@ class LineSampleGenerator():
 
 class LineEmbeddingGenerator():
 
-    def __init__(self, model, embedding, max_length=20):
+    def __init__(self, model, embedding, max_length=20, use_gpu=False):
 
         self.rnn = model
         self.embedding = embedding
         self.max_length = max_length
+        self.use_gpu = use_gpu
 
     def fit_shape(self, vector):
-        return Variable(torch.FloatTensor(vector.reshape(1, 1, -1)))
+        if self.use_gpu:
+            return Variable(torch.FloatTensor(vector.reshape(1, 1, -1))).cuda()
+        else:
+            return Variable(torch.FloatTensor(vector.reshape(1, 1, -1)))
 
     def sample(self, start_letter='가'):
         start_word = random.choice([key for key in self.embedding.vocab if key[0] == start_letter])
@@ -109,7 +113,7 @@ class LineEmbeddingGenerator():
             self.output_tensor = self.rnn(self.input_tensor)
             # topv, topi = self.output_scores.data.topk(1)
             # topi = topi[0][0]
-            self.output_vector = self.output_tensor.data[0, 0, :].numpy()
+            self.output_vector = self.output_tensor.cpu().data[0, 0, :].numpy()
             topn = self.embedding.model.wv.similar_by_vector(self.output_vector)
             next_word = random.choice(topn)[0]
             if next_word == PAD_TOKEN:

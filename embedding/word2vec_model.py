@@ -16,6 +16,7 @@ class Word2VecModel() :
         self.min_count = min_count
         self.workers = workers
         self.sample = sample # downsampling
+        self.iter = iter
         # skip gram이 좋은 이유 : https://ratsgo.github.io/from%20frequency%20to%20semantics/2017/03/30/word2vec/
         self.sg = sg
 
@@ -34,7 +35,7 @@ class Word2VecModel() :
         
         if (os.path.exists(output_filepath + '.w2v') 
             and os.path.exists(output_filepath + '_unknown_token.npy')
-            and refresh == False):
+            and not refresh):
 
             return self.load(output_filepath)
 
@@ -45,7 +46,8 @@ class Word2VecModel() :
                          min_count=self.min_count,
                          workers=self.workers, 
                          sample=self.sample, 
-                         sg=self.sg)
+                         sg=self.sg,
+                         iter = self.iter)
         self.vocab = self.model.wv.vocab.keys()
         self.pad_token = self.model.wv['<PAD>/Pad']
 
