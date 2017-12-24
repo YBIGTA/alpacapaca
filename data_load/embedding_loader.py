@@ -12,10 +12,10 @@ class TextUtils:
 
 class EmbeddingDataset(Dataset):
     
-    def __init__(self, input_filepath, embedding):
+    def __init__(self, input_filepath, embedding, max_len=50, min_len=3):
         
         raw_sentences = TextUtils.read_words(input_filepath)
-        self.sentences = [sentence for sentence in raw_sentences if len(sentence) > 3 and len(sentence) < 30] 
+        self.sentences = [sentence for sentence in raw_sentences if len(sentence) > min_len and len(sentence) < max_len] 
         self.embedding = embedding
         
     def __getitem__(self, index):
