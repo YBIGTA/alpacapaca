@@ -2,6 +2,8 @@ import time
 import math
 import pickle 
 from tqdm import tqdm
+import logging, os
+from datetime import datetime
 
 import torch
 import torch.nn as nn
@@ -71,7 +73,7 @@ class LetterTrainer():
 class DataLoaderTrainer():
 
     def __init__(self, model, dataloader, optimizer, scheduler, criterion=nn.MSELoss(), 
-                print_every=1, plot_every=1, use_gpu=False):
+                print_every=1, plot_every=1, log_dirpath='train/log/', log_filename='{datetime}.log', use_gpu=False):
 
         self.rnn = model
         self.dataloader = dataloader
@@ -83,6 +85,34 @@ class DataLoaderTrainer():
         self.i = 0
         self.all_losses = []
         self.use_gpu = use_gpu
+        
+        # 프로젝트 최상단 디렉토리 경로를 가져온다.
+        dirname = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        self.abs_output_dirpath = os.path.join(dirname, log_dirpath)
+        if not os.path.exists(self.abs_output_dirpath):
+            os.mkdir(self.abs_output_dirpath)
+            
+        log_filepath = os.path.join(self.abs_output_dirpath, log_filename)
+
+        self.logger = logging.getLogger('pacapaca_logger')
+        
+        if not self.logger.handlers: # execute only if logger doesn't exist:
+            fileHandler = logging.FileHandler(log_filepath.format(datetime=datetime.now()))
+            streamHandler = logging.StreamHandler(os.sys.stdout)
+
+            formatter = logging.Formatter('[%(levelname)s] %(asctime)s > %(message)s', datefmt='%m-%d %H:%M:%S')
+
+            fileHandler.setFormatter(formatter)
+            streamHandler.setFormatter(formatter)
+
+            self.logger.addHandler(fileHandler)
+            self.logger.addHandler(streamHandler)
+            self.logger.setLevel(logging.INFO)
+        
+        self.base_message = ("Epoch: {epoch:<3d} Progress: {progress:<.1%} "
+                             "Loss: {loss:<.6} "
+                             "Learning rate: {learning_rate:<.4} "
+                             "Elapsed: {elapsed} ")
 
     def train(self):
 
@@ -96,7 +126,6 @@ class DataLoaderTrainer():
 
             self.optimizer.zero_grad()
             self.rnn.init_hidden(inputs.size(0), self.use_gpu)
-
             self.sentence_out = self.rnn(self.inputs)
             loss = self.criterion(self.sentence_out, self.targets)
             loss.backward()
@@ -117,9 +146,15 @@ class DataLoaderTrainer():
             self.i = i
 
             self.avg_loss = self.train()
+            self.scheduler.step(self.avg_loss)
 
             if i % self.print_every == 0:
-                print('%s (%d %d%%) %.4f' % (self.timeSince(start), i, i / epochs * 100, self.avg_loss))
+                current_lr = self.optimizer.param_groups[0]['lr']
+                message = self.base_message.format(epoch=i, progress=i/epochs, 
+                                                   loss=self.avg_loss, 
+                                                   learning_rate=current_lr,
+                                                   elapsed=self.timeSince(start))
+                self.logger.info(message)
                 
             if i % self.plot_every == 0:
                 self.all_losses.append(self.avg_loss)
