@@ -49,7 +49,7 @@ class Word2VecModel() :
                          sg=self.sg,
                          iter = self.iter)
         self.vocab = self.model.wv.vocab.keys()
-        self.pad_token = self.model.wv['<PAD>/Pad']
+        self.pad_token = self.model.wv['<Pad>/Pad']
 
         self.save(output_filepath)
 
@@ -64,7 +64,23 @@ class Word2VecModel() :
         self.model = Word2Vec.load(output_filepath + '.w2v')
         self.unknown_token = np.load(output_filepath + '_unknown_token.npy')
         self.vocab = self.model.wv.vocab.keys()
-        self.pad_token = self.model.wv['<PAD>/Pad']
+        self.pad_token = self.model.wv['<Pad>/Pad']
+    
+    @classmethod
+    def load_from(cls, output_filename, output_dirpath='embedding/output/'):
+        
+        # 프로젝트 최상단 디렉토리 경로를 가져온다.
+        dirname = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        abs_output_dirpath = os.path.join(dirname, output_dirpath)
+        output_filepath = os.path.join(abs_output_dirpath, output_filename)
+        
+        instance = cls()
+        instance.model = Word2Vec.load(output_filepath + '.w2v')
+        instance.unknown_token = np.load(output_filepath + '_unknown_token.npy')
+        instance.vocab = instance.model.wv.vocab.keys()
+        instance.pad_token = instance.model.wv['<Pad>/Pad']
+        return instance
+        
 
 if __name__ == '__main__':
     
