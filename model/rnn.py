@@ -58,7 +58,25 @@ class BasicLSTM(nn.Module):
         else:
             self.hidden = (Variable(torch.zeros(1, batch_size, self.rnn_size)),
                 Variable(torch.zeros(1, batch_size, self.rnn_size)))
-            
+
+class Highway(nn.Module):
+    def __init__(self, num_features):
+        super(Highway, self).__init__()
+        self.fc1 = nn.Linear(num_features, num_features)
+        self.gate_layer = nn.Linear(num_features, num_features)
+        
+        self.tanh = nn.Tanh()
+        self.sigmoid = nn.Sigmoid()
+        
+    def forward(self, inputs):
+        
+        normal_fc = self.tanh(self.fc1(inputs))
+        transformation_layer = self.sigmoid(self.gate_layer(inputs))
+        
+        carry_layer = 1 - transformation_layer
+        info_flow = normal_fc * transformation_layer + (1-transformation_layer)*inputs
+        return info_flow            
+
 class DeepLSTM(nn.Module):
     def __init__(self, wordvec_size=300, hidden_size=1024, linear_size=512,
                  num_layers=3,
@@ -76,10 +94,12 @@ class DeepLSTM(nn.Module):
         self.tanh = nn.Tanh()
         self.relu = nn.ReLU()
         self.sigmoid = nn.Sigmoid()
-        # batch norm
+
+        self.batchnorm1 = nn.BatchNorm1d(hidden_size//2)
+        self.batchnorm2 = nn.BatchNorm1d(hidden_size//2)
+        self.batchnorm3 = nn.BatchNorm1d(hidden_size//2)
         
-        self.highway_t = nn.Linear(hidden_size, hidden_size)
-        self.highway_g = nn.Linear(hidden_size, hidden_size)
+        self.highway = nn.ModuleList([Highway(hidden_size) for _ in range(highway_num_layers)])
         
         self.dense1 = nn.Linear(hidden_size, hidden_size//2)
         self.dense2 = nn.Linear(hidden_size//2, wordvec_size)
@@ -88,17 +108,15 @@ class DeepLSTM(nn.Module):
         # inputs : (batch_size, seq_size, embedding_size)
         lstm_out, self.hidden = self.lstm(inputs, self.hidden)
         self.last_out = lstm_out
-        self.relu_out = self.relu(self.hidden2out_1(self.last_out))
-        self.tanh_out = self.tanh(self.hidden2out_2(self.last_out))
+        self.relu_out = self.batchnorm1(self.relu(self.hidden2out_1(self.last_out)).view(-1, 512, inputs.size(1))).view(-1, inputs.size(1), 512)
+        self.tanh_out = self.batchnorm2(self.tanh(self.hidden2out_2(self.last_out)).view(-1, 512, inputs.size(1))).view(-1, inputs.size(1), 512)
         self.concat = torch.cat([self.relu_out, self.tanh_out], dim=2)
         
-        def _highway(in_features, num_layers=1, bias=-2.0):
-            t = self.sigmoid(self.highway_t(in_features) + bias)
-            g = nn.functional.relu(self.highway_g(in_features))
-            return t * g + (1-t) * in_features
-        
-        self.highway_out = _highway(self.concat)
-        return self.dense2(self.dense1(self.highway_out))
+        x = self.concat
+        for current_highway in self.highway:
+            x = current_highway(x)
+            
+        return self.dense2(self.batchnorm3(self.relu(self.dense1(x)).view(-1, 512, inputs.size(1))).view(-1, inputs.size(1), 512))
 
     def init_hidden(self, batch_size, use_gpu=False):
         hidden_shape = (self.num_layers, batch_size, self.hidden_size)
