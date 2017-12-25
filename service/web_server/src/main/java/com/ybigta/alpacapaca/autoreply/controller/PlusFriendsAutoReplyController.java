@@ -4,6 +4,7 @@ import com.ybigta.alpacapaca.autoreply.PayloadFieldTypes;
 import com.ybigta.alpacapaca.autoreply.dao.AlpacapacaRecordRepository;
 import com.ybigta.alpacapaca.autoreply.model.AlpacapacaRecord;
 import com.ybigta.alpacapaca.autoreply.model.MessageRequest;
+import com.ybigta.alpacapaca.autoreply.service.MessageGenerationResult;
 import com.ybigta.alpacapaca.autoreply.service.MessageGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -43,18 +44,20 @@ public class PlusFriendsAutoReplyController {
         Map<String, Object> message = new HashMap<>();
 
         String inputContent = messageRequest.getContent();
-        String returnMessage = messageGenerator.generateMessage(inputContent);
+        MessageGenerationResult messageGenerationResult = messageGenerator.generateMessage(inputContent);
 
-        message.put(PayloadFieldTypes.TEXT, returnMessage);
+        message.put(PayloadFieldTypes.TEXT, messageGenerationResult.getMessage());
         response.put(PayloadFieldTypes.MESSAGE, message);
 
-        // 데이터베이스에 기록을 남긴다.
-        AlpacapacaRecord record = new AlpacapacaRecord();
-        record.setUserKey(messageRequest.getUserKey());
-        record.setInput(inputContent);
-        record.setOutput(returnMessage);
-        record.setRequestTime(serverTime);
-        recordRepository.save(record);
+        // 메세지 생성에 성공했을 경우에만 데이터베이스에 기록을 남긴다.
+        if (messageGenerationResult.isValid()) {
+            AlpacapacaRecord record = new AlpacapacaRecord();
+            record.setUserKey(messageRequest.getUserKey());
+            record.setInput(inputContent);
+            record.setOutput(messageGenerationResult.getMessage());
+            record.setRequestTime(serverTime);
+            recordRepository.save(record);
+        }
 
         return response;
     }

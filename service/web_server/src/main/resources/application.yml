@@ -16,7 +16,7 @@ spring:
     hibernate:
       ddl-auto: none
   datasource:
-    url: jdbc:mysql://db_endpoint:3306/alpacapaca?useUnicode=true&characterEncoding=utf8
-    username:
-    password:
+    url: jdbc:mysql://db_url:3306/db_name?useUnicode=true&characterEncoding=utf8
+    username: secret
+    password: secret
 
