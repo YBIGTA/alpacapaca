@@ -11,3 +11,12 @@ logging:
 management:
   security:
     enabled: false
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: none
+  datasource:
+    url: jdbc:mysql://db_endpoint:3306/alpacapaca?useUnicode=true&characterEncoding=utf8
+    username:
+    password:
+

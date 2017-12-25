@@ -1,22 +1,28 @@
 package com.ybigta.alpacapaca.autoreply.controller;
 
 import com.ybigta.alpacapaca.autoreply.PayloadFieldTypes;
+import com.ybigta.alpacapaca.autoreply.dao.AlpacapacaRecordRepository;
+import com.ybigta.alpacapaca.autoreply.model.AlpacapacaRecord;
 import com.ybigta.alpacapaca.autoreply.model.MessageRequest;
 import com.ybigta.alpacapaca.autoreply.service.MessageGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
 @RestController
 public class PlusFriendsAutoReplyController {
     private final MessageGenerator messageGenerator;
+    private final AlpacapacaRecordRepository recordRepository;
 
     @Autowired
-    public PlusFriendsAutoReplyController(final MessageGenerator messageGenerator) {
+    public PlusFriendsAutoReplyController(final MessageGenerator messageGenerator,
+                                          final AlpacapacaRecordRepository repository) {
         this.messageGenerator = messageGenerator;
+        this.recordRepository = repository;
     }
 
     @GetMapping(value = "/keyboard")
@@ -31,6 +37,8 @@ public class PlusFriendsAutoReplyController {
     @PostMapping(value = "/message")
     @ResponseStatus(HttpStatus.OK)
     public Map<String, Object> submitMessage(@RequestBody MessageRequest messageRequest) {
+        long serverTime = Instant.now().toEpochMilli();
+
         Map<String, Object> response = new HashMap<>();
         Map<String, Object> message = new HashMap<>();
 
@@ -39,6 +47,14 @@ public class PlusFriendsAutoReplyController {
 
         message.put(PayloadFieldTypes.TEXT, returnMessage);
         response.put(PayloadFieldTypes.MESSAGE, message);
+
+        // 데이터베이스에 기록을 남긴다.
+        AlpacapacaRecord record = new AlpacapacaRecord();
+        record.setUserKey(messageRequest.getUserKey());
+        record.setInput(inputContent);
+        record.setOutput(returnMessage);
+        record.setRequestTime(serverTime);
+        recordRepository.save(record);
 
         return response;
     }
