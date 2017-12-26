@@ -15,12 +15,12 @@ class EmbeddingDataset(Dataset):
     def __init__(self, input_filepath, embedding, max_len=50, min_len=3):
         
         raw_sentences = TextUtils.read_words(input_filepath)
-        self.sentences = [sentence for sentence in raw_sentences if len(sentence) > min_len and len(sentence) < max_len] 
+        sorted_sentences = sorted(raw_sentences, key=lambda x: len(x), reverse=False)
+        self.sentences = [sentence for sentence in sorted_sentences if len(sentence) > min_len and len(sentence) < max_len]
         self.embedding = embedding
         
     def __getitem__(self, index):
         sentence = self.sentences[index]
-        
         sentence_vector = np.stack([self.embedding.vectorize(word) for word in sentence[:-1]])
         target_vector = np.stack([self.embedding.vectorize(word) for word in sentence[1:]])
         
@@ -31,9 +31,10 @@ class EmbeddingDataset(Dataset):
 
 class EmbeddingDataLoader(DataLoader):
     
-    def __init__(self, *args, **kwargs):
+    def __init__(self, pad, *args, **kwargs):
         super(EmbeddingDataLoader, self).__init__(*args, **kwargs)
         self.collate_fn = self._collate_fn
+        self.pad = pad
         
     def _collate_fn(self, batch):
         max_sample = max(batch, key=lambda x: x[0].shape[0])
@@ -44,9 +45,8 @@ class EmbeddingDataLoader(DataLoader):
         outputs = []
         for inp, outp in batch:
             ss = inp.shape[0]
-            new_inp = np.append(inp, np.zeros((max_length-ss,embedding_size)), axis=0)
-            new_outp = np.append(outp, np.zeros((max_length-ss,embedding_size)), axis=0)
-
+            new_inp = np.append(inp, np.tile(self.pad, [max_length-ss, 1]), axis=0)
+            new_outp = np.append(outp, np.tile(self.pad, [max_length-ss, 1]), axis=0)
             inputs.append(new_inp.squeeze())
             outputs.append(new_outp.squeeze())
         
