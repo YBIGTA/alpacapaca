@@ -24,24 +24,27 @@ public class MessageGeneratorImpl implements MessageGenerator {
     }
 
     @Override
-    public String generateMessage(final String inputContent) {
-        StringBuilder builder = new StringBuilder();
+    public MessageGenerationResult generateMessage(final String inputContent) {
+        MessageGenerationResult messageGenerationResult = new MessageGenerationResult();
         ValidationResult validationResult = contentValidator.validate(inputContent);
 
         if (validationResult.isValid()) {
             ResponseEntity<AlpacapacaMessage> response = getAlpacapacaMessage(inputContent);
             if (response.getStatusCode() == HttpStatus.OK) {
                 AlpacapacaMessage message = response.getBody();
-                builder.append(toResultFormat(message));
+                messageGenerationResult.setValid(true);
+                messageGenerationResult.setMessage(toResultFormat(message));
             } else {
                 log.info("Server Error Occurs: {}", response.getStatusCodeValue());
-                builder.append(ErrorMessages.SERVER_ERROR_MESSAGE);
+                messageGenerationResult.setValid(false);
+                messageGenerationResult.setMessage(ErrorMessages.SERVER_ERROR_MESSAGE);
             }
         } else {
-            builder.append(validationResult.getMessage());
+            messageGenerationResult.setValid(false);
+            messageGenerationResult.setMessage(validationResult.getMessage());
         }
 
-        return builder.toString();
+        return messageGenerationResult;
     }
 
     private String toResultFormat(final AlpacapacaMessage message) {

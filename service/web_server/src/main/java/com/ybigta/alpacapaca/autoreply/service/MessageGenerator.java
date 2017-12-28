@@ -6,7 +6,7 @@ public interface MessageGenerator {
      * 입력한 내용을 Validator 를 이용해 검증하고 적합하다면 3행시를 생성해 제공합니다.
      *
      * @param inputContent 사용자가 채팅창을 통해 입력한 내용
-     * @return inputContent 가 적합하다면 3행시가 그렇지 않다면 그에 알맞은 문구가 반환됩니다.
+     * @return Message generation 의 성공여부와 메시지를 담은 객체가 반환됩니다.
      */
-    String generateMessage(final String inputContent);
+    MessageGenerationResult generateMessage(final String inputContent);
 }

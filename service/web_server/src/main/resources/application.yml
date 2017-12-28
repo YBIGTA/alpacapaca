@@ -11,3 +11,12 @@ logging:
 management:
   security:
     enabled: false
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: none
+  datasource:
+    url: jdbc:mysql://db_url:3306/db_name?useUnicode=true&characterEncoding=utf8
+    username: secret
+    password: secret
+
