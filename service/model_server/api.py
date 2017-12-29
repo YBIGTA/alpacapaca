@@ -116,4 +116,6 @@ class Alpacapaca(Resource):
                 'results': results}
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=True)
+#     app.run(host='0.0.0.0', debug=True)
+    
+    print(generator.samples('김연아'))
