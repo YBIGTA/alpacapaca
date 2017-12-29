@@ -89,8 +89,8 @@ class DeepLSTM(nn.Module):
             self.hidden = (Variable(torch.zeros(hidden_shape)),
                 Variable(torch.zeros(hidden_shape)))
 
-embedding = ReplacingWord2VecModel.load_from('only_lyrics_no_japanese_word2vec_100')
-model = torch.load('train/output/80_first_success.pth')
+embedding = ReplacingWord2VecModel.load_from('only_lyrics_no_japanese_word2vec_100', output_dirpath='/home/ubuntu/alpacapaca/embedding/output/')
+model = torch.load('/home/ubuntu/alpacapaca/train/output/80_first_success.pth')
 model.eval()
 model = model.cpu()
 
