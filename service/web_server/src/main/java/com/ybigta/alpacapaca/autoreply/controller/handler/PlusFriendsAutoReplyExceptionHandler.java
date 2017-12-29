@@ -16,7 +16,7 @@ public class PlusFriendsAutoReplyExceptionHandler {
     private static final String SERVER_ERROR_MESSAGE = "죄송합니다. 서버 문제로 메세지 생성에 실패하였습니다.";
 
     @ExceptionHandler({Exception.class})
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ResponseStatus(HttpStatus.OK)
     public Map<String, Object> handleDefaultError(final Exception exception) {
         log.error(exception.getMessage());
 
