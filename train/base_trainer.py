@@ -260,7 +260,7 @@ class TrainValTrainer():
             self.i = i
 
             self.avg_loss, self.avg_val_loss = self.train()
-            self.scheduler.step(self.avg_loss)
+            self.scheduler.step(self.avg_val_loss)
 
             if i % self.print_every == 0:
                 current_lr = self.optimizer.param_groups[0]['lr']
