@@ -3,7 +3,7 @@ from torch.utils.data import Dataset
 import torch
 import torch.nn.functional as F
 import numpy as np
-
+from tqdm import tqdm
 class TextUtils:
     @staticmethod
     def read_words(filename):
@@ -21,6 +21,40 @@ class EmbeddingDataset(Dataset):
         
     def __getitem__(self, index):
         sentence = self.sentences[index]
+        replaced_sentence = [self.embedding.replace(word) for word in sentence]
+#         if sentence != replaced_sentence:
+#             print(sentence, replaced_sentence)
+        sentence_vector = np.stack([self.embedding.vectorize(word) for word in replaced_sentence[:-1]])
+        target_vector = np.stack([self.embedding.vectorize(word) for word in replaced_sentence[1:]])
+        
+        return sentence_vector, target_vector
+    
+    def __len__(self):
+        return len(self.sentences)
+
+class RawTextUtils:
+    @staticmethod
+    def read_words(filename):
+        with open(filename, 'r', encoding= "utf-8") as file:
+            return [sentence.strip() for sentence in file.readlines()]
+
+class UniqueEmbeddingDataset(Dataset):
+    
+    def __init__(self, input_filepath, embedding, max_len=50, min_len=3):
+        
+        raw_sentences = RawTextUtils.read_words(input_filepath)
+        unique_sentences = set(raw_sentences)
+        replaced_sentence = []
+        for sentence in tqdm(unique_sentences):
+            replaced_sentence.append([embedding.replace(word) for word in sentence.split()])
+        sorted_sentences = sorted(replaced_sentence, key=lambda x: len(x), reverse=False)
+        self.sentences = [sentence for sentence in sorted_sentences if len(sentence) > min_len and len(sentence) < max_len]
+        self.embedding = embedding
+        
+    def __getitem__(self, index):
+#         if sentence != replaced_sentence:
+#             print(sentence, replaced_sentence)
+        sentence = self.sentences[index]
         sentence_vector = np.stack([self.embedding.vectorize(word) for word in sentence[:-1]])
         target_vector = np.stack([self.embedding.vectorize(word) for word in sentence[1:]])
         
@@ -29,6 +63,7 @@ class EmbeddingDataset(Dataset):
     def __len__(self):
         return len(self.sentences)
 
+    
 class EmbeddingDataLoader(DataLoader):
     
     def __init__(self, pad, *args, **kwargs):
