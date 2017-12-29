@@ -106,20 +106,25 @@ class LineEmbeddingGenerator():
         proper_start_words = [key for key in self.embedding.vocab if key[0] == start_letter and len(key.split('/')[0]) > 1]
         total_count = sum(self.embedding.model.wv.vocab[word].count for word in proper_start_words)
         word_prob = [(word, self.embedding.model.wv.vocab[word].count/total_count) for word in proper_start_words]
-        smooth_word_prob = [(word, prob**1/4)for word, prob in word_prob]
-        multinomial_pick = np.random.multinomial(1, [prob for word, prob in smooth_word_prob])
+#         print(word_prob)
+#         print(word_prob)
+#         smooth_word_prob = [(word, prob) for word, prob in word_prob]
+        multinomial_pick = np.random.multinomial(1, [prob for word, prob in word_prob])
         pick_index = multinomial_pick.argsort()[-1]
         pick_word = word_prob[pick_index][0]
         return pick_word
     
-    def sample(self, start_letter='가'):
+    def sample(self, start_letter, raw):
         start_word = self._pick_start_word(start_letter)
         self.input_vector = self.embedding.vectorize(start_word)
         self.input_tensor = self.fit_shape(self.input_vector)
 
         self.rnn.init_hidden(1, self.use_gpu)
-
-        self.output_line = start_word.split('/')[0]
+        
+        if not raw:
+            self.output_line = start_word.split('/')[0]
+        else:
+            self.output_line = start_word
 
         for i in range(self.max_length):
             self.output_tensor = self.rnn(self.input_tensor)
@@ -127,19 +132,26 @@ class LineEmbeddingGenerator():
             # topi = topi[0][0]
             self.output_vector = self.output_tensor.cpu().data[0, 0, :].numpy()
             topn = self.embedding.model.wv.similar_by_vector(self.output_vector, topn=self.topn)
+
+            topn = [(word, prob) for word, prob in topn if word.split('/')[0] not in ['릅쯔쯔르', '요룰', '일랜시아', '쿠탓테', '데키루코토', '히토츠즈츠', '골게', '일백구십사', '반야바라밀다심경', ]]
+#             print(topn)
             next_word = random.choice(topn)[0]
             if next_word == PAD_TOKEN:
                 break
-            self.output_line = self.output_line + ' ' + next_word.split('/')[0]
+#             print(next_word)
+            if not raw:
+                self.output_line = self.output_line + ' ' + next_word.split('/')[0]
+            else:
+                self.output_line = self.output_line + ' ' + next_word
             self.input_vector = self.embedding.vectorize(next_word)
             self.input_tensor = self.fit_shape(self.input_vector)
 
         return self.output_line
 
-    def samples(self, start_letters='가나다'):
+    def samples(self, start_letters='가나다', raw=False):
         results = []
         for start_letter in start_letters:
-            results.append(self.sample(start_letter))
+            results.append(self.sample(start_letter, raw=raw))
         return results
     
 class OneLineGenerator():
@@ -162,7 +174,7 @@ class OneLineGenerator():
         proper_start_words = [key for key in self.embedding.vocab if key[0] == start_letter and len(key.split('/')[0]) > 1]
         total_count = sum(self.embedding.model.wv.vocab[word].count for word in proper_start_words)
         word_prob = [(word, self.embedding.model.wv.vocab[word].count/total_count) for word in proper_start_words]
-        smooth_word_prob = [(word, prob**1/4)for word, prob in word_prob]
+        smooth_word_prob = [(word, prob**1/4) for word, prob in word_prob]
         multinomial_pick = np.random.multinomial(1, [prob for word, prob in smooth_word_prob])
         pick_index = multinomial_pick.argsort()[-1]
         pick_word = word_prob[pick_index][0]
