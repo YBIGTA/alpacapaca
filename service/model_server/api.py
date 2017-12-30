@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_restplus import Resource, Api
 from flask_cors import CORS
+from flask import abort
 
 import os, sys
 import inspect
@@ -110,12 +111,15 @@ class Alpacapaca(Resource):
     
     def get(self, input_word):
         
-        results = generator.samples(input_word)
+        try:
+            results = generator.samples(input_word)
 
-        return {'success': True,
-                'results': results}
+            return {'success': True,
+                    'results': results}
+        except:
+            abort(500)
 
-if __name__ == '__main__':
-#     app.run(host='0.0.0.0', debug=True)
-    
+if __name__ == '__main__':    
     print(generator.samples('김연아'))
+    
+    app.run(host='0.0.0.0', debug=True)
