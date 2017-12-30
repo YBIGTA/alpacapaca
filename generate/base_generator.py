@@ -5,6 +5,7 @@ import time
 import math
 import pickle 
 import numpy as np
+import hgtk
 
 import torch
 import torch.nn as nn
@@ -101,9 +102,47 @@ class LineEmbeddingGenerator():
             return Variable(torch.FloatTensor(vector.reshape(1, 1, -1))).cuda()
         else:
             return Variable(torch.FloatTensor(vector.reshape(1, 1, -1)))
+        
+    def change_multiple(self, start_letter):
+    #     한자음 '녀, 뇨, 뉴, 니, 랴, 려, 례, 료, 류, 리' 등 ㄴ 또는 ㄹ+ㅣ나 ㅣ로 시작하는 이중모음이 단어 첫머리에 올 때 '여, 요, 유, 이', '야, 여, 예, 요, 유, 이'로 발음한다. 
+    #     한자음 '라, 래, 로, 뢰, 루, 르' 등 ㄹ+ㅣ를 제외한 단모음이 단어 첫머리에 올 때 '나, 내, 노, 뇌, 누, 느'로 발음한다.
+        zaeum_list = ['ㄴ', 'ㄹ']
+        single_moeum_list = ['ㅔ', 'ㅐ', 'ㅟ', 'ㅚ', 'ㅡ', 'ㅓ', 'ㅏ', 'ㅜ', 'ㅗ']
+        double_moeum_list = ['ㅣ', 'ㅑ', 'ㅕ', 'ㅛ', 'ㅠ', 'ㅖ', 'ㅒ']
+
+        decompose = hgtk.letter.decompose(start_letter)
+        first_zaeum = decompose[0]
+        first_moeum = decompose[1]
+        if first_zaeum in zaeum_list:
+            #first case
+            if first_moeum in double_moeum_list:
+                new_letter_component = list(decompose)
+                new_letter_component[0] = 'ㅇ'
+                new_letter = hgtk.letter.compose(*new_letter_component)
+                return [start_letter, new_letter]
+            elif first_zaeum == 'ㄹ' and first_moeum in single_moeum_list:
+                new_letter_component = list(decompose)
+                new_letter_component[0] = 'ㄴ'
+                new_letter = hgtk.letter.compose(*new_letter_component)
+                return [start_letter, new_letter]
+            else:
+                return [start_letter]
+        else:
+            return [start_letter]
     
     def _pick_start_word(self, start_letter):
-        proper_start_words = [key for key in self.embedding.vocab if key[0] == start_letter and len(key.split('/')[0]) > 1]
+        word_list = self.change_multiple(start_letter) #두음법칙 적용해야 할경우 고르자
+
+        if len(word_list) == 1: #word_list 길이가 1일때 - 두음법칙 적용 안함
+            proper_start_words = [key for key in self.embedding.vocab if key[0] == start_letter and len(key.split('/')[0]) > 1]
+        else: #word_list 길이가 2일때 - 두음법칙 적용 함
+            original_letter = word_list[0]
+            new_letter = word_list[1]
+
+            proper_start_words_1 = [key for key in self.embedding.vocab if key[0] == original_letter and len(key.split('/')[0]) > 1]
+            proper_start_words_2 = [key for key in self.embedding.vocab if key[0] == new_letter and len(key.split('/')[0]) > 1]
+            proper_start_words = proper_start_words_1 + proper_start_words_2
+            
         total_count = sum(self.embedding.model.wv.vocab[word].count for word in proper_start_words)
         word_prob = [(word, self.embedding.model.wv.vocab[word].count/total_count) for word in proper_start_words]
 #         print(word_prob)
