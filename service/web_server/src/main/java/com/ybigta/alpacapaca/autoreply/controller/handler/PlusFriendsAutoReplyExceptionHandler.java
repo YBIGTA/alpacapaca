@@ -13,7 +13,7 @@ import java.util.Map;
 @Slf4j
 @RestControllerAdvice
 public class PlusFriendsAutoReplyExceptionHandler {
-    private static final String SERVER_ERROR_MESSAGE = "죄송합니다. 서버 문제로 메세지 생성에 실패하였습니다.";
+    private static final String SERVER_ERROR_MESSAGE = "사실 저희 알파카파카가...\n\n과부하로 인해 \n\n문제가 생겼습니다...힝><";
 
     @ExceptionHandler({Exception.class})
     @ResponseStatus(HttpStatus.OK)

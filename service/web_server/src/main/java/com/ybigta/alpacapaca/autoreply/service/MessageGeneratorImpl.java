@@ -13,7 +13,7 @@ import org.springframework.web.client.RestTemplate;
 @Slf4j
 @Service
 public class MessageGeneratorImpl implements MessageGenerator {
-    private static final String ENTER = "\n";
+    private static final String LINE_SEPARATOR = "\n\n";
     private final ContentValidator contentValidator;
     @Value("${model-server-endpoint}")
     private String modelServerEndPoint;
@@ -52,7 +52,7 @@ public class MessageGeneratorImpl implements MessageGenerator {
 
         if (message.isSuccess() &&
                 message.getResults() != null && message.getResults().size() == 3) {
-            builder.append(String.join(ENTER, message.getResults()));
+            builder.append(String.join(LINE_SEPARATOR, message.getResults()));
         } else {
             log.error("Result format error {}", message.getResults());
             builder.append(ErrorMessages.MESSAGE_GENERATING_FAILURE_MESSAGE);
